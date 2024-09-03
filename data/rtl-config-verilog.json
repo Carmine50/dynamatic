@@ -763,5 +763,38 @@
     ],
     "generic": "$DYNAMATIC/data/verilog/support/mem_to_bram.v",
     "hdl": "verilog"
+  },
+  {
+    "name": "__esp_stream",
+    "generator": "\"$DYNAMATIC/bin/generators/esp-module-generator\" \"$DYNAMATIC/experimental/data/esp-config.dot\" \"$OUTPUT_DIR/esp_stream.dot\" "
+  },
+  {
+    "name": "__esp_LoadReqESP",
+    "generic": "$DYNAMATIC/experimental/data/verilog/support/LoadReqESP.v"
+  },
+  {
+    "name": "__esp_StoreReqESP",
+    "generic": "$DYNAMATIC/experimental/data/verilog/support/StoreReqESP.v"
+  },
+  {
+    "name": "__decoder",
+    "generic": "$DYNAMATIC/experimental/data/vhdl/support/decoder.vhd"
+  },
+  {
+    "name": "__systolic_unit",
+    "generic": "$DYNAMATIC/experimental/data/vhdl/support/esp_units.vhd"
+  },
+  {
+    "name": "__systolic_ctrl_unit",
+    "generic": "$DYNAMATIC/experimental/data/vhdl/support/esp_units.vhd"
+  },
+  {
+    "name": "__fifo",
+    "parameters": [
+      { "name": "SLOTS", "type": "unsigned", "lb": 2 },
+      { "name": "DATA_WIDTH", "type": "unsigned", "lb": 1 }
+    ],
+    "generic": "$DYNAMATIC/experimental/data/vhdl/handshake/tfifo.vhd",
+    "dependencies": ["elastic_fifo_inner_dataless"]
   }
 ]
