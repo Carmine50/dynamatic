@@ -766,27 +766,30 @@
   },
   {
     "name": "__esp_stream",
-    "generator": "\"$DYNAMATIC/bin/generators/esp-module-generator\" \"$DYNAMATIC/experimental/data/esp-config.dot\" \"$OUTPUT_DIR/esp_stream.dot\" "
+    "generator": "\"$DYNAMATIC/bin/generators/esp-module-generator\" \"$DYNAMATIC/experimental/data/esp-config.dot\" \"$OUTPUT_DIR/esp_stream.dot\" ",
+    "hdl": "verilog"
   },
   {
     "name": "__esp_LoadReqESP",
-    "generic": "$DYNAMATIC/experimental/data/verilog/support/LoadReqESP.v"
+    "generic": "$DYNAMATIC/data/verilog/support/LoadReqESP.v",
+    "hdl": "verilog"
   },
   {
     "name": "__esp_StoreReqESP",
-    "generic": "$DYNAMATIC/experimental/data/verilog/support/StoreReqESP.v"
+    "generic": "$DYNAMATIC/data/verilog/support/StoreReqESP.v",
+    "hdl": "verilog"
   },
   {
     "name": "__decoder",
-    "generic": "$DYNAMATIC/experimental/data/vhdl/support/decoder.vhd"
+    "generic": "$DYNAMATIC/data/vhdl/support/decoder.vhd"
   },
   {
     "name": "__systolic_unit",
-    "generic": "$DYNAMATIC/experimental/data/vhdl/support/esp_units.vhd"
+    "generic": "$DYNAMATIC/data/vhdl/support/esp_units.vhd"
   },
   {
     "name": "__systolic_ctrl_unit",
-    "generic": "$DYNAMATIC/experimental/data/vhdl/support/esp_units.vhd"
+    "generic": "$DYNAMATIC/data/vhdl/support/esp_units.vhd"
   },
   {
     "name": "__fifo",
@@ -794,7 +797,7 @@
       { "name": "SLOTS", "type": "unsigned", "lb": 2 },
       { "name": "DATA_WIDTH", "type": "unsigned", "lb": 1 }
     ],
-    "generic": "$DYNAMATIC/experimental/data/vhdl/handshake/tfifo.vhd",
+    "generic": "$DYNAMATIC/data/vhdl/handshake/tfifo.vhd",
     "dependencies": ["elastic_fifo_inner_dataless"]
   }
 ]
