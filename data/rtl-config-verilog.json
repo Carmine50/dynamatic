@@ -767,21 +767,25 @@
   {
     "name": "__esp_stream",
     "generator": "\"$DYNAMATIC/bin/generators/esp-module-generator\" \"$DYNAMATIC/experimental/data/esp-config.dot\" \"$OUTPUT_DIR/esp_stream.dot\" ",
+    "dependencies": ["decoder"],
     "hdl": "verilog"
   },
   {
     "name": "__esp_LoadReqESP",
     "generic": "$DYNAMATIC/data/verilog/support/LoadReqESP.v",
+    "dependencies": ["muli"],
     "hdl": "verilog"
   },
   {
     "name": "__esp_StoreReqESP",
     "generic": "$DYNAMATIC/data/verilog/support/StoreReqESP.v",
+    "dependencies": ["muli"],
     "hdl": "verilog"
   },
   {
-    "name": "__decoder",
-    "generic": "$DYNAMATIC/data/vhdl/support/decoder.vhd"
+    "name": "decoder",
+    "generic": "$DYNAMATIC/data/verilog/arith/decoder.v",
+    "hdl": "verilog"
   },
   {
     "name": "__systolic_unit",
