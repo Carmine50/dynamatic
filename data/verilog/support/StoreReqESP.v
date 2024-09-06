@@ -25,21 +25,21 @@ module StoreReqESP #(parameter INPUTS = 4,
 	wire joinReady;	
 
 
-    mul_op #(.INPUTS(2), .OUTPUTS(OUTPUTS), .DATA_IN_SIZE(DATA_IN_SIZE), .DATA_OUT_SIZE(DATA_OUT_SIZE)) muli0
+    muli #( .DATA_TYPE(DATA_IN_SIZE), .LATENCY(4)  ) muli0
     (.clk(clk), .rst(rst), .data_in_bus({data_in_bus[0 * DATA_IN_SIZE +: DATA_IN_SIZE], data_in_bus[2 * DATA_IN_SIZE +: DATA_IN_SIZE]}), .valid_in_bus({valid_in_bus[0], valid_in_bus[2]}), .ready_in_bus({readyOutMul[0], readyOutMul[2]}),
     .data_out_bus(result_mul0), .valid_out_bus(valid_mul0), .ready_out_bus(ready_mul0));
 
-    mul_op #(.INPUTS(2), .OUTPUTS(OUTPUTS), .DATA_IN_SIZE(DATA_IN_SIZE), .DATA_OUT_SIZE(DATA_OUT_SIZE)) muli1
+    muli #( .DATA_TYPE(DATA_IN_SIZE), .LATENCY(4)  ) muli1
     (.clk(clk), .rst(rst), .data_in_bus({data_in_bus[1 * DATA_IN_SIZE +: DATA_IN_SIZE], data_in_bus[3 * DATA_IN_SIZE +: DATA_IN_SIZE]}), .valid_in_bus({valid_in_bus[1], valid_in_bus[3]}), .ready_in_bus({readyOutMul[1], readyOutMul[3]}),
     .data_out_bus(result_mul1), .valid_out_bus(valid_mul1), .ready_out_bus(ready_mul1));
 
-    add_op #(.INPUTS(2), .OUTPUTS(OUTPUTS), .DATA_IN_SIZE(DATA_IN_SIZE), .DATA_OUT_SIZE(DATA_OUT_SIZE)) add0
+    addi #( .DATA_TYPE(DATA_IN_SIZE)  ) add0
     (.clk(clk), .rst(rst), .data_in_bus({result_mul0, result_mul1}), .valid_in_bus({valid_mul0, valid_mul1}), .ready_in_bus({ready_mul0, ready_mul1}),
     .data_out_bus(data_out_bus), .valid_out_bus(valid_out_bus), .ready_out_bus(ready_out_bus));
 
 	// synchronize inputs
 	//
-	 	joinC #(.N(4)) j(.valid_in(valid_in_bus), .ready_in(ready_in_bus), .valid_out(joinValid), .ready_out(joinReady));
+	 	join_type #(.SIZE(4)) j(.valid_in(valid_in_bus), .ready_in(ready_in_bus), .valid_out(joinValid), .ready_out(joinReady));
 	//
 	 		assign joinReady = readyOutMul[0] & readyOutMul[1] & readyOutMul[2] & readyOutMul[3];
 	//

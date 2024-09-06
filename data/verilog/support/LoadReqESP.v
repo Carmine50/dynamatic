@@ -14,7 +14,7 @@ module LoadReqESP #(parameter INPUTS = 1,
                 input   [OUTPUTS - 1 : 0] ready_out_bus
 );
 
-    mul_op #(.INPUTS(INPUTS), .OUTPUTS(OUTPUTS), .DATA_IN_SIZE(DATA_IN_SIZE), .DATA_OUT_SIZE(DATA_OUT_SIZE)) muli0
+    muli #(.DATA_TYPE(DATA_IN_SIZE), .LATENCY(4)) muli0
     (.clk(clk), .rst(rst), .data_in_bus(data_in_bus), .valid_in_bus(valid_in_bus), .ready_in_bus(ready_in_bus),
     .data_out_bus(data_out_bus), .valid_out_bus(valid_out_bus), .ready_out_bus(ready_out_bus));
 
