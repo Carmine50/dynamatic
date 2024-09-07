@@ -10,12 +10,14 @@ typedef long in_long_t;
 long __esp_stream(long fifo_in, int conf_info_op_mode, int conf_info_fpsa);
 long __esp_LoadReqESP(int iBurst, int conf_info_mat_1_size, int conf_info_mat_out_size);
 long __esp_StoreReqESP(int iBurst, int conf_info_mat_1_size, int conf_info_mat_out_size);
-long external_function(long out);
+long load_ctrl(long out);
+long store_ctrl(long out);
+long out_word_V(long out);
 
-long __fifo(long ins);
-long __decoder(long data_in);
-long __systolic_unit(int start, int tile_op_mode, int tile_fpsa_config, long data_in_1, long data_in_2);
-long __systolic_ctrl_unit(long data_in, int condition);
+//long __fifo(long ins);
+//long __decoder(long data_in);
+//long __systolic_unit(int start, int tile_op_mode, int tile_fpsa_config, long data_in_1, long data_in_2);
+//long __systolic_ctrl_unit(long data_in, int condition);
 
 
 //int esp_matrix_multiplication(in_int_t conf_info_nbursts, in_int_t conf_info_mat_1_size, in_int_t conf_info_mat_out_size , in_int_t conf_info_fpsa, 
