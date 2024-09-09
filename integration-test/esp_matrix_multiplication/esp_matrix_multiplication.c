@@ -16,7 +16,7 @@ void esp_matrix_multiplication(in_int_t conf_info_nbursts, in_int_t conf_info_ma
     //value =
     for ( iPacket = 0; iPacket < conf_info_mat_1_size ; iPacket++ ){
       long fifo_in =  in1_word_V();
-      result_fifo_out =  __esp_stream(fifo_in, conf_info_op_mode, conf_info_fpsa, conf_info_mat_1_size);
+      result_fifo_out =  __esp_fpsa(fifo_in, conf_info_op_mode, conf_info_fpsa, conf_info_mat_1_size);
       out_word_V( result_fifo_out );
     }
 
