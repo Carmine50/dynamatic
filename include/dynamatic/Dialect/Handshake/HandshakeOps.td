@@ -545,6 +545,163 @@ def NotOp : Handshake_Op<"not", [Pure, SameOperandsAndResultType,
   let assemblyFormat = "$operand attr-dict `:` type($result)";
 }
 
+def DecoderOp : Handshake_Op<"decoder", []> {
+  let summary = "decoder operation";
+  let description = [{
+    The decoder operation represents a deterministic decoder operation.
+    Operands: select, data, out0, out1, ...
+
+    The 'select' operand is received from an external control entity of the same
+    block and it represents the index of the output to which the data operand 
+    should be forwarded to.  The number of outputs
+    corresponds to the number of successor blocks.
+
+    The decoder operation is intended solely for control+dataflow selection.
+
+    Example:
+    ```mlir
+    %0, %1, ... = decoder %select %data0 {attributes}: index, i32
+    ```
+  }];
+  let arguments = (ins AnyType : $selectOperand, AnyType : $dataOperand);
+  let results = (outs Variadic<AnyType> : $results);
+  let builders = [OpBuilder<
+    (ins "Value":$selectOperand, "Value":$dataOperand, "unsigned":$size), [{
+      $_state.addOperands(selectOperand);
+      $_state.addOperands(dataOperand);
+      SmallVector<Type> resultTypes {size, dataOperand.getType()};
+      $_state.addTypes(resultTypes);
+  }]>];
+}
+
+def DecoderAlterOp : Handshake_Op<"decoderAlt", []> {
+  let summary = "decoder alternated operation";
+  let description = [{
+    The decoder alternated operation represents a(deterministic) decoder operation.
+    Differently from the previous decoder, it alternatively distributes signal to each output
+    Operands: data, out0, out1, ...
+
+    The number of outputs corresponds to the number of successor blocks.
+
+    The decoder operation is intended solely for control+dataflow selection.
+
+    Example:
+    ```mlir
+    %0, %1, ... = decoder %data0 {attributes}: index, i32
+    ```
+  }];
+  let arguments = (ins AnyType : $dataOperand);
+  let results = (outs Variadic<AnyType> : $results);
+  let builders = [OpBuilder<
+    (ins "Value":$dataOperand, "unsigned":$size), [{
+      $_state.addOperands(dataOperand);
+      SmallVector<Type> resultTypes {size, dataOperand.getType()};
+      $_state.addTypes(resultTypes);
+  }]>];
+}
+
+//===----------------------------------------------------------------------===//
+// ESP-specific operations
+//===----------------------------------------------------------------------===//
+
+def LoadReqESPOp : Handshake_Op<"loadReqESP", []> {
+  let summary = "load request ESP operation";
+  let description = [{
+    The load request ESP operation is used to generate the load requests for ESP environment
+    Operands: nChunk, mat_in_size, out0, ...
+
+    The operation computes the load to request depending on the chunk number nChunk 
+    and the input size of the matrix
+
+    Example:
+    ```mlir
+    %0 = loadReqESP %nChunk %mat_in_size  {attributes}: index, i32
+    ```
+  }];
+  let arguments = (ins AnyType : $nChunk, AnyType : $mat_in_size);
+  let results = (outs AnyType : $result);
+  let builders = [OpBuilder<
+    (ins "Value":$nChunk, "Value":$mat_in_size ), [{
+      $_state.addOperands(nChunk);
+      $_state.addOperands(mat_in_size);
+      $_state.addTypes(mat_in_size.getType());
+  }]>];
+}
+
+def StoreReqESPOp : Handshake_Op<"storeReqESP", []> {
+  let summary = "store request ESP operation";
+  let description = [{
+    The store request ESP operation is used to generate the store requests for ESP environment
+    Operands: nChunk, mat_in_size, mat_out_size, nTotalChunk, out0, ...
+
+    The operation computes the store to request depending on the chunk number nChunk 
+    and the input and output sizes of the matrices and the total number of chunks
+
+    Example:
+    ```mlir
+    %0 = storeReqESP %nChunk %mat_in_size %mat_out_size %nTotalChunk {attributes}: index, i32
+    ```
+  }];
+  let arguments = (ins AnyType : $nChunk, AnyType : $mat_in_size, AnyType : $mat_out_size, AnyType : $nTotalChunk);
+  let results = (outs AnyType : $result);
+  let builders = [OpBuilder<
+    (ins "Value":$nChunk, "Value":$mat_in_size, "Value":$mat_out_size, "Value":$nTotalChunk), [{
+      $_state.addOperands(nChunk);
+      $_state.addOperands(mat_in_size);
+      $_state.addOperands(mat_out_size);
+      $_state.addOperands(nTotalChunk);
+      $_state.addTypes(mat_in_size.getType());
+  }]>];
+}
+
+def SystolicOp : Handshake_Op<"systolicOp", []> {
+  let summary = "store request ESP operation";
+  let description = [{
+    The systolic unit receives as input the start signal (when to start to process the information), the
+    tile_op_mode (the operating mode of the systolic unit), tile_fpsa_config (the configuration of the systolic unit),
+    dataIn1 ( data input 1), dataIn2 ( data input 2)
+
+    Example:
+    ```mlir
+    %0 = systolicOp %start %tile_op_mode %tile_fpsa_config %dataIn1 %dataIn2 {attributes}: index, i32
+    ```
+  }];
+  let arguments = (ins AnyType : $start, AnyType : $tile_op_mode, AnyType : $tile_fpsa_config, AnyType : $dataIn1, AnyType : $dataIn2);
+  let results = (outs AnyType : $result);
+  let builders = [OpBuilder<
+    (ins "Value":$start, "Value":$tile_op_mode, "Value":$tile_fpsa_config, "Value":$dataIn1, "Value":$dataIn2), [{
+      $_state.addOperands(start);
+      $_state.addOperands(tile_op_mode);
+      $_state.addOperands(tile_fpsa_config);
+      $_state.addOperands(dataIn1);
+      $_state.addOperands(dataIn2);
+      $_state.addTypes(dataIn1.getType());
+  }]>];
+}
+
+def SystolicCtrlOp : Handshake_Op<"systolicCtrlOp", []> {
+  let summary = "store request ESP operation";
+  let description = [{
+    The systolic unit receives as input the start signal (when to start to process the information), the
+    tile_op_mode (the operating mode of the systolic unit), tile_fpsa_config (the configuration of the systolic unit),
+    dataIn1 ( data input 1), dataIn2 ( data input 2)
+
+    Example:
+    ```mlir
+    %0 = systolicCtrlOp %condition %dataIn1 {attributes}: index, i32
+    ```
+  }];
+  let arguments = (ins AnyType : $condition, AnyType : $dataIn1);
+  let results = (outs AnyType : $result_data, AnyType : $result_ctrl);
+  let builders = [OpBuilder<
+    (ins "Value":$condition, "Value":$dataIn1), [{
+      $_state.addOperands(condition);
+      $_state.addOperands(dataIn1);
+      $_state.addTypes(dataIn1.getType());
+      $_state.addTypes(condition.getType());
+  }]>];
+}
+
 //===----------------------------------------------------------------------===//
 // Memory interfaces and access ports
 //===----------------------------------------------------------------------===//
