@@ -97,4 +97,17 @@ def CreditBasedSharing : DynamaticPass<"credit-based-sharing"> {
       "'buffer-placement' at the binary's location.">];
 }
 
+def ESPfpsa : DynamaticPass<"esp-fpsa"> {
+  let summary = "Integration of ESP fpsa";
+  let description = [{ This pass generates the elements present inside the esp module. 
+  Specifically it generates an fpsa element inside the esp module }];
+  let constructor = "dynamatic::experimental::espIntegration::insertESPfpsa()";
+
+  let options = [Option<"fpsaMode", "fpsaMode", "std::string", "\"matMul\"", 
+      "FPSA mode. There are two available fpsa modes: 'matMul' (default) and 'conv'."
+      "Depending on this mode, the fpsa will execute a different operation">, 
+      Option<"arcPath", "arcPath", "std::string", "", 
+      "Path to the file that describes the architecture to implement">];
+}
+
 #endif // EXPERIMENTAL_TRANSFORMS_PASSES_TD
