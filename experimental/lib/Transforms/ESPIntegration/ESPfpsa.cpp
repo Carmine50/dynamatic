@@ -133,16 +133,32 @@ LogicalResult ESPfpsaPass::replaceInstanceOp(handshake::InstanceOp instanceOp,
     handshake::BufferOp inputFifo = builder.create<handshake::BufferOp>(
         instanceOp->getLoc(), input, handshake::TimingInfo::oehb(), 64);
     inputFifos.push_back(inputFifo);
-    // handshake::SinkOp sinkOp = builder.create<handshake::SinkOp>(
-    //     instanceOp->getLoc(), inputFifo.getResult());
+    handshake::SinkOp sinkOp = builder.create<handshake::SinkOp>(
+        instanceOp->getLoc(), inputFifo.getResult());
   }
+  handshake::SourceOp srcOp =
+      builder.create<handshake::SourceOp>(instanceOp->getLoc());
+  handshake::ConstantOp constantOp = builder.create<handshake::ConstantOp>(
+      instanceOp->getLoc(), out0.getType(), builder.getI64IntegerAttr(0),
+      srcOp.getResult());
+
   handshake::BufferOp outputFifo = builder.create<handshake::BufferOp>(
-      instanceOp->getLoc(), out0, handshake::TimingInfo::oehb(), 64);
-  // handshake::SinkOp sinkOp = builder.create<handshake::SinkOp>(
-  //     instanceOp->getLoc(), outputFifo.getResult());
+      instanceOp->getLoc(), constantOp->getResult(0),
+      handshake::TimingInfo::oehb(), 64);
+  handshake::SourceOp srcOp2 =
+      builder.create<handshake::SourceOp>(instanceOp->getLoc());
+  handshake::ConstantOp constantOp2 = builder.create<handshake::ConstantOp>(
+      instanceOp->getLoc(), out0.getType(), builder.getI64IntegerAttr(0),
+      srcOp2.getResult());
+  handshake::BufferOp outputFifo2 = builder.create<handshake::BufferOp>(
+      instanceOp->getLoc(), constantOp2->getResult(0),
+      handshake::TimingInfo::oehb(), 64);
+  out0.replaceAllUsesWith(outputFifo.getResult());
+  endEsp.replaceAllUsesWith(outputFifo2.getResult());
 
   // remove the instance operation
   instanceOp->erase();
+  instanceFuncOp->erase();
 
   return success();
 }
