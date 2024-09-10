@@ -49,9 +49,62 @@ struct ESPfpsaPass
 
   LogicalResult replaceInstanceOp(handshake::InstanceOp instanceOp,
                                   handshake::FuncOp instanceFuncOp);
+
+  LogicalResult createESPfpsa(handshake::InstanceOp instanceOp,
+                              handshake::FuncOp instanceFuncOp, Value inputData,
+                              Value opMode, Value infoFpsa, Value matInSize,
+                              Value startSig, Value out0, Value endEsp);
 };
 
-// this function replaces the InstanceOp with the sub-circuit of ESP FPSA
+// This function replaces the InstanceOp with the sub-circuit of ESP FPSA
+LogicalResult ESPfpsaPass::createESPfpsa(handshake::InstanceOp instanceOp,
+                                         handshake::FuncOp instanceFuncOp,
+                                         Value inputData, Value opMode,
+                                         Value infoFpsa, Value matInSize,
+                                         Value startSig, Value out0,
+                                         Value endEsp) {
+  MLIRContext *ctx = &getContext();
+  OpBuilder builder(ctx);
+
+  builder.setInsertionPoint(instanceOp);
+
+  // creating the ESP FPSA structure
+  // initiate input fifo for each input
+  SmallVector<handshake::BufferOp> inputFifos;
+  for (Value input : {inputData, opMode, infoFpsa, matInSize, startSig}) {
+    handshake::BufferOp inputFifo = builder.create<handshake::BufferOp>(
+        instanceOp->getLoc(), input, handshake::TimingInfo::oehb(), 64);
+    inputFifos.push_back(inputFifo);
+  }
+  handshake::SourceOp srcOp =
+      builder.create<handshake::SourceOp>(instanceOp->getLoc());
+  handshake::ConstantOp constantOp = builder.create<handshake::ConstantOp>(
+      instanceOp->getLoc(), out0.getType(), builder.getI64IntegerAttr(0),
+      srcOp.getResult());
+
+  handshake::BufferOp outputFifo = builder.create<handshake::BufferOp>(
+      instanceOp->getLoc(), constantOp->getResult(0),
+      handshake::TimingInfo::oehb(), 64);
+  out0.replaceAllUsesWith(outputFifo.getResult());
+
+  // send valid signal to the end module
+  // TODO: send the valid signal to true only when execution is finished
+  handshake::SourceOp srcValidEndESP =
+      builder.create<handshake::SourceOp>(instanceOp->getLoc());
+  handshake::ConstantOp cstValidEndESP = builder.create<handshake::ConstantOp>(
+      instanceOp->getLoc(), out0.getType(), builder.getI64IntegerAttr(1),
+      srcValidEndESP.getResult());
+  endEsp.replaceAllUsesWith(cstValidEndESP.getResult());
+
+  // remove the instance operation
+  instanceOp->erase();
+  instanceFuncOp->erase();
+
+  return success();
+}
+
+// This function identifies the inputs and outputs of the instance operation
+// and creates the ESP FPSA structure
 LogicalResult ESPfpsaPass::replaceInstanceOp(handshake::InstanceOp instanceOp,
                                              handshake::FuncOp instanceFuncOp) {
 
@@ -113,52 +166,12 @@ LogicalResult ESPfpsaPass::replaceInstanceOp(handshake::InstanceOp instanceOp,
     }
   }
 
-  Value inputData = operandsESPmodule[0];
-  Value opMode = operandsESPmodule[1];
-  Value infoFpsa = operandsESPmodule[2];
-  Value matInSize = operandsESPmodule[3];
-  Value startSig = operandsESPmodule[4];
-  Value out0 = resultsESPmodule[0];
-  Value endEsp = resultsESPmodule[1];
-
-  MLIRContext *ctx = &getContext();
-  OpBuilder builder(ctx);
-
-  builder.setInsertionPoint(instanceOp);
-
-  // creating the ESP FPSA structure
-  // initiate input fifo for each input
-  SmallVector<handshake::BufferOp> inputFifos;
-  for (Value input : operandsESPmodule) {
-    handshake::BufferOp inputFifo = builder.create<handshake::BufferOp>(
-        instanceOp->getLoc(), input, handshake::TimingInfo::oehb(), 64);
-    inputFifos.push_back(inputFifo);
-    handshake::SinkOp sinkOp = builder.create<handshake::SinkOp>(
-        instanceOp->getLoc(), inputFifo.getResult());
+  if (failed(createESPfpsa(instanceOp, instanceFuncOp, operandsESPmodule[0],
+                           operandsESPmodule[1], operandsESPmodule[2],
+                           operandsESPmodule[3], operandsESPmodule[4],
+                           resultsESPmodule[0], resultsESPmodule[1]))) {
+    return failure();
   }
-  handshake::SourceOp srcOp =
-      builder.create<handshake::SourceOp>(instanceOp->getLoc());
-  handshake::ConstantOp constantOp = builder.create<handshake::ConstantOp>(
-      instanceOp->getLoc(), out0.getType(), builder.getI64IntegerAttr(0),
-      srcOp.getResult());
-
-  handshake::BufferOp outputFifo = builder.create<handshake::BufferOp>(
-      instanceOp->getLoc(), constantOp->getResult(0),
-      handshake::TimingInfo::oehb(), 64);
-  handshake::SourceOp srcOp2 =
-      builder.create<handshake::SourceOp>(instanceOp->getLoc());
-  handshake::ConstantOp constantOp2 = builder.create<handshake::ConstantOp>(
-      instanceOp->getLoc(), out0.getType(), builder.getI64IntegerAttr(0),
-      srcOp2.getResult());
-  handshake::BufferOp outputFifo2 = builder.create<handshake::BufferOp>(
-      instanceOp->getLoc(), constantOp2->getResult(0),
-      handshake::TimingInfo::oehb(), 64);
-  out0.replaceAllUsesWith(outputFifo.getResult());
-  endEsp.replaceAllUsesWith(outputFifo2.getResult());
-
-  // remove the instance operation
-  instanceOp->erase();
-  instanceFuncOp->erase();
 
   return success();
 }
