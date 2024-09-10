@@ -43,7 +43,10 @@ struct ESPfpsaPass
     : public dynamatic::experimental::espIntegration::impl::ESPfpsaBase<
           ESPfpsaPass> {
 
-  ESPfpsaPass(StringRef fpsaMode, StringRef arcPath) {}
+  ESPfpsaPass(std::string fpsaMode, std::string arcPath) {
+    this->fpsaMode = fpsaMode;
+    this->arcPath = arcPath;
+  }
 
   void runDynamaticPass() override;
 
@@ -80,29 +83,71 @@ LogicalResult ESPfpsaPass::createESPfpsa(handshake::InstanceOp instanceOp,
 
   // generate the control operation for the systolic unit
   // which manages the start signal of the systolic unit
-  handshake::SystolicCtrlOp sysCtrl = builder.create<handshake::SystolicCtrlOp>(
-      instanceOp->getLoc(), inputFifos[3], inputFifos[0]);
+  Value ctrlSysCtrl;
+  Value dataSysCtrl;
+  if (this->fpsaMode == "matMul") {
+    handshake::SystolicCtrlOp sysCtrl =
+        builder.create<handshake::SystolicCtrlOp>(instanceOp->getLoc(),
+                                                  inputFifos[3], inputFifos[0]);
+    ctrlSysCtrl = sysCtrl.getResultCtrl();
+    dataSysCtrl = sysCtrl.getResultData();
+  } else if (this->fpsaMode == "conv") {
+    handshake::SystolicCtrlConvOp sysCtrl =
+        builder.create<handshake::SystolicCtrlConvOp>(
+            instanceOp->getLoc(), inputFifos[3], inputFifos[0]);
+    ctrlSysCtrl = sysCtrl.getResultCtrl();
+    dataSysCtrl = sysCtrl.getResultData();
+  } else {
+    llvm::errs() << "The fpsaMode " << this->fpsaMode
+                 << " is not supported yet\n";
+    return failure();
+  }
 
   // generate the decoder operation for the systolic unit
+  size_t numSystolicUnits = 1;
   handshake::DecoderAlterOp decoderAlter =
-      builder.create<handshake::DecoderAlterOp>(instanceOp->getLoc(),
-                                                sysCtrl.getResultData(), 2);
+      builder.create<handshake::DecoderAlterOp>(
+          instanceOp->getLoc(), dataSysCtrl, numSystolicUnits * 2);
 
-  // generate the buffer operations for the systolic unit inputs
-  handshake::BufferOp inputSysWest = builder.create<handshake::BufferOp>(
-      instanceOp->getLoc(), decoderAlter.getResult(0),
-      handshake::TimingInfo::oehb(), fifoDepth);
-  handshake::BufferOp inputSysNorth = builder.create<handshake::BufferOp>(
-      instanceOp->getLoc(), decoderAlter.getResult(1),
-      handshake::TimingInfo::oehb(), fifoDepth);
+  Value finalOut;
+  SmallVector<handshake::SystolicOp> systolicOps;
 
-  handshake::SystolicOp systolicOp = builder.create<handshake::SystolicOp>(
-      instanceOp->getLoc(), sysCtrl.getResultCtrl(), inputFifos[1],
-      inputFifos[2], inputSysWest, inputSysNorth);
+  if (numSystolicUnits > 1) {
+    assert(false && "Multiple systolic units are not supported yet");
+    // TODO: add a fork to forward opMode, infoFpsa and ctrlSysCtrl to each
+    // systolic unit
+  }
+
+  for (size_t iSysUnit = 0; iSysUnit < numSystolicUnits; iSysUnit++) {
+    // generate the buffer operations for the systolic unit inputs of each
+    // systolic
+    handshake::BufferOp inputSysWest = builder.create<handshake::BufferOp>(
+        instanceOp->getLoc(), decoderAlter.getResult(iSysUnit * 2),
+        handshake::TimingInfo::oehb(), fifoDepth);
+    handshake::BufferOp inputSysNorth = builder.create<handshake::BufferOp>(
+        instanceOp->getLoc(), decoderAlter.getResult(iSysUnit * 2 + 1),
+        handshake::TimingInfo::oehb(), fifoDepth);
+
+    handshake::SystolicOp systolicOp = builder.create<handshake::SystolicOp>(
+        instanceOp->getLoc(), ctrlSysCtrl, inputFifos[1], inputFifos[2],
+        inputSysWest, inputSysNorth);
+    systolicOps.push_back(systolicOp);
+  }
+
+  switch (systolicOps.size()) {
+  case 0:
+    return failure();
+    break;
+  case 1:
+    finalOut = systolicOps[0].getResult();
+    break;
+  default:
+    // TODO: consider the case of multiple systolic units
+    break;
+  }
 
   handshake::BufferOp outputFifo = builder.create<handshake::BufferOp>(
-      instanceOp->getLoc(), systolicOp.getResult(),
-      handshake::TimingInfo::oehb(), fifoDepth);
+      instanceOp->getLoc(), finalOut, handshake::TimingInfo::oehb(), fifoDepth);
   out0.replaceAllUsesWith(outputFifo.getResult());
 
   // connect start signal to sink
@@ -229,8 +274,8 @@ namespace experimental {
 namespace espIntegration {
 
 /// Returns a unique pointer to an operation pass that matches MLIR modules.
-std::unique_ptr<dynamatic::DynamaticPass> insertESPfpsa(StringRef fpsaMode,
-                                                        StringRef arcPath) {
+std::unique_ptr<dynamatic::DynamaticPass> insertESPfpsa(std::string fpsaMode,
+                                                        std::string arcPath) {
   return std::make_unique<ESPfpsaPass>(fpsaMode, arcPath);
 }
 

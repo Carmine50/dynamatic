@@ -25,7 +25,7 @@ namespace espIntegration {
 #include "experimental/Transforms/Passes.h.inc"
 
 std::unique_ptr<dynamatic::DynamaticPass>
-insertESPfpsa(StringRef fpsaMode = "matMul", StringRef arcPath = "");
+insertESPfpsa(std::string fpsaMode = "matMul", std::string arcPath = "");
 
 } // namespace espIntegration
 } // namespace experimental
