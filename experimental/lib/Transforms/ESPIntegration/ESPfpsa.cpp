@@ -63,6 +63,7 @@ LogicalResult ESPfpsaPass::createESPfpsa(handshake::InstanceOp instanceOp,
                                          Value infoFpsa, Value matInSize,
                                          Value startSig, Value out0,
                                          Value endEsp) {
+  size_t fifoDepth = 64;
   MLIRContext *ctx = &getContext();
   OpBuilder builder(ctx);
 
@@ -71,21 +72,43 @@ LogicalResult ESPfpsaPass::createESPfpsa(handshake::InstanceOp instanceOp,
   // creating the ESP FPSA structure
   // initiate input fifo for each input
   SmallVector<handshake::BufferOp> inputFifos;
-  for (Value input : {inputData, opMode, infoFpsa, matInSize, startSig}) {
+  for (Value input : {inputData, opMode, infoFpsa, matInSize}) {
     handshake::BufferOp inputFifo = builder.create<handshake::BufferOp>(
-        instanceOp->getLoc(), input, handshake::TimingInfo::oehb(), 64);
+        instanceOp->getLoc(), input, handshake::TimingInfo::oehb(), fifoDepth);
     inputFifos.push_back(inputFifo);
   }
-  handshake::SourceOp srcOp =
-      builder.create<handshake::SourceOp>(instanceOp->getLoc());
-  handshake::ConstantOp constantOp = builder.create<handshake::ConstantOp>(
-      instanceOp->getLoc(), out0.getType(), builder.getI64IntegerAttr(0),
-      srcOp.getResult());
+
+  // generate the control operation for the systolic unit
+  // which manages the start signal of the systolic unit
+  handshake::SystolicCtrlOp sysCtrl = builder.create<handshake::SystolicCtrlOp>(
+      instanceOp->getLoc(), inputFifos[3], inputFifos[0]);
+
+  // generate the decoder operation for the systolic unit
+  handshake::DecoderAlterOp decoderAlter =
+      builder.create<handshake::DecoderAlterOp>(instanceOp->getLoc(),
+                                                sysCtrl.getResultData(), 2);
+
+  // generate the buffer operations for the systolic unit inputs
+  handshake::BufferOp inputSysWest = builder.create<handshake::BufferOp>(
+      instanceOp->getLoc(), decoderAlter.getResult(0),
+      handshake::TimingInfo::oehb(), fifoDepth);
+  handshake::BufferOp inputSysNorth = builder.create<handshake::BufferOp>(
+      instanceOp->getLoc(), decoderAlter.getResult(1),
+      handshake::TimingInfo::oehb(), fifoDepth);
+
+  handshake::SystolicOp systolicOp = builder.create<handshake::SystolicOp>(
+      instanceOp->getLoc(), sysCtrl.getResultCtrl(), inputFifos[1],
+      inputFifos[2], inputSysWest, inputSysNorth);
 
   handshake::BufferOp outputFifo = builder.create<handshake::BufferOp>(
-      instanceOp->getLoc(), constantOp->getResult(0),
-      handshake::TimingInfo::oehb(), 64);
+      instanceOp->getLoc(), systolicOp.getResult(),
+      handshake::TimingInfo::oehb(), fifoDepth);
   out0.replaceAllUsesWith(outputFifo.getResult());
+
+  // connect start signal to sink
+  // TODO: consider the start signal
+  handshake::SinkOp sinkStart =
+      builder.create<handshake::SinkOp>(instanceOp->getLoc(), startSig);
 
   // send valid signal to the end module
   // TODO: send the valid signal to true only when execution is finished
