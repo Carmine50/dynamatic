@@ -765,9 +765,50 @@
     "hdl": "verilog"
   },
   {
-    "name": "__esp_stream",
-    "generator": "\"$DYNAMATIC/bin/generators/esp-module-generator\" \"$DYNAMATIC/experimental/data/esp-config.dot\" \"$OUTPUT_DIR/esp_stream.dot\" ",
-    "dependencies": ["decoder"],
+    "name": "handshake.decoder",
+    "parameters": [
+      { "name": "SIZE", "type": "unsigned", "lb": 1 },
+      {
+        "name": "DATA_TYPE",
+        "type": "dataflow",
+        "data-eq": 0,
+        "extra-eq": 0,
+        "generic": false
+      },
+      { "name": "SELECT_TYPE", "type": "dataflow", "data-lb": 1, "extra-eq": 0 }
+    ],
+    "generic": "$DYNAMATIC/data/verilog/support/decoder.v",
+    "hdl": "verilog"
+  },
+  {
+    "name": "handshake.decoderAlt",
+    "parameters": [
+      { "name": "SIZE", "type": "unsigned", "lb": 1 },
+      {
+        "name": "DATA_TYPE",
+        "type": "dataflow",
+        "data-eq": 0,
+        "extra-eq": 0,
+        "generic": false
+      }
+    ],
+    "generic": "$DYNAMATIC/data/verilog/support/decoderAlt.v",
+    "dependencies":["decoder"],
+    "hdl": "verilog"
+  },
+  {
+    "name": "handshake.systolicOp",
+    "generic": "$DYNAMATIC/data/verilog/arith/decoder.v",
+    "hdl": "verilog"
+  },
+  {
+    "name": "handshake.systolicCtrlOp",
+    "generic": "$DYNAMATIC/data/verilog/arith/decoder.v",
+    "hdl": "verilog"
+  },
+  {
+    "name": "handshake.systolicCtrlConvOp",
+    "generic": "$DYNAMATIC/data/verilog/arith/decoder.v",
     "hdl": "verilog"
   },
   {
@@ -787,27 +828,5 @@
     ],
     "dependencies": ["muli"],
     "hdl": "verilog"
-  },
-  {
-    "name": "decoder",
-    "generic": "$DYNAMATIC/data/verilog/arith/decoder.v",
-    "hdl": "verilog"
-  },
-  {
-    "name": "__systolic_unit",
-    "generic": "$DYNAMATIC/data/vhdl/support/esp_units.vhd"
-  },
-  {
-    "name": "__systolic_ctrl_unit",
-    "generic": "$DYNAMATIC/data/vhdl/support/esp_units.vhd"
-  },
-  {
-    "name": "__fifo",
-    "parameters": [
-      { "name": "SLOTS", "type": "unsigned", "lb": 2 },
-      { "name": "DATA_WIDTH", "type": "unsigned", "lb": 1 }
-    ],
-    "generic": "$DYNAMATIC/data/vhdl/handshake/tfifo.vhd",
-    "dependencies": ["elastic_fifo_inner_dataless"]
   }
 ]
