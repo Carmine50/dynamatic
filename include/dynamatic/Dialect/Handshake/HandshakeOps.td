@@ -655,7 +655,7 @@ def StoreReqESPOp : Handshake_Op<"storeReqESP", []> {
 }
 
 def SystolicOp : Handshake_Op<"systolicOp", []> {
-  let summary = "store request ESP operation";
+  let summary = "systolic unit";
   let description = [{
     The systolic unit receives as input the start signal (when to start to process the information), the
     tile_op_mode (the operating mode of the systolic unit), tile_fpsa_config (the configuration of the systolic unit),
@@ -680,15 +680,34 @@ def SystolicOp : Handshake_Op<"systolicOp", []> {
 }
 
 def SystolicCtrlOp : Handshake_Op<"systolicCtrlOp", []> {
-  let summary = "store request ESP operation";
+  let summary = "controller of the systolic unit";
   let description = [{
-    The systolic unit receives as input the start signal (when to start to process the information), the
-    tile_op_mode (the operating mode of the systolic unit), tile_fpsa_config (the configuration of the systolic unit),
-    dataIn1 ( data input 1), dataIn2 ( data input 2)
-
+    The systolic control unit generates the input signals for the systolic unit
     Example:
     ```mlir
     %0 = systolicCtrlOp %condition %dataIn1 {attributes}: index, i32
+    ```
+  }];
+  let arguments = (ins AnyType : $condition, AnyType : $dataIn1);
+  let results = (outs AnyType : $result_data, AnyType : $result_ctrl);
+  let builders = [OpBuilder<
+    (ins "Value":$condition, "Value":$dataIn1), [{
+      $_state.addOperands(condition);
+      $_state.addOperands(dataIn1);
+      $_state.addTypes(dataIn1.getType());
+      $_state.addTypes(condition.getType());
+  }]>];
+}
+
+def SystolicCtrlConvOp : Handshake_Op<"systolicCtrlConvOp", []> {
+  let summary = "controller of the systolic unit for convolution";
+  let description = [{
+    The systolic control convolution unit generates the input signals for the systolic unit
+    and re-orders the data for convolution
+
+    Example:
+    ```mlir
+    %0 = systolicCtrlConvOp %condition %dataIn1 {attributes}: index, i32
     ```
   }];
   let arguments = (ins AnyType : $condition, AnyType : $dataIn1);
