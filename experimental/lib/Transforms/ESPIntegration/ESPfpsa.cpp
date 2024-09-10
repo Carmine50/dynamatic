@@ -14,6 +14,7 @@
 
 #include "experimental/Transforms/ESPIntegration/ESPfpsa.h"
 #include "dynamatic/Analysis/NameAnalysis.h"
+#include "dynamatic/Dialect/Handshake/HandshakeAttributes.h"
 #include "dynamatic/Dialect/Handshake/HandshakeInterfaces.h"
 #include "dynamatic/Dialect/Handshake/HandshakeOps.h"
 #include "dynamatic/Support/DynamaticPass.h"
@@ -125,8 +126,23 @@ LogicalResult ESPfpsaPass::replaceInstanceOp(handshake::InstanceOp instanceOp,
 
   builder.setInsertionPoint(instanceOp);
 
-  handshake::BufferOp inputFifo = builder.create<handshake::BufferOp>(
-      instanceOp->getLoc(), inputData.getType(), inputData, SIZE);
+  // creating the ESP FPSA structure
+  // initiate input fifo for each input
+  SmallVector<handshake::BufferOp> inputFifos;
+  for (Value input : operandsESPmodule) {
+    handshake::BufferOp inputFifo = builder.create<handshake::BufferOp>(
+        instanceOp->getLoc(), input, handshake::TimingInfo::oehb(), 64);
+    inputFifos.push_back(inputFifo);
+    // handshake::SinkOp sinkOp = builder.create<handshake::SinkOp>(
+    //     instanceOp->getLoc(), inputFifo.getResult());
+  }
+  handshake::BufferOp outputFifo = builder.create<handshake::BufferOp>(
+      instanceOp->getLoc(), out0, handshake::TimingInfo::oehb(), 64);
+  // handshake::SinkOp sinkOp = builder.create<handshake::SinkOp>(
+  //     instanceOp->getLoc(), outputFifo.getResult());
+
+  // remove the instance operation
+  instanceOp->erase();
 
   return success();
 }
