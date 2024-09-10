@@ -768,13 +768,7 @@
     "name": "handshake.decoder",
     "parameters": [
       { "name": "SIZE", "type": "unsigned", "lb": 1 },
-      {
-        "name": "DATA_TYPE",
-        "type": "dataflow",
-        "data-eq": 0,
-        "extra-eq": 0,
-        "generic": false
-      },
+      { "name": "DATA_TYPE", "type": "dataflow", "data-lb": 1, "extra-eq": 0 },
       { "name": "SELECT_TYPE", "type": "dataflow", "data-lb": 1, "extra-eq": 0 }
     ],
     "generic": "$DYNAMATIC/data/verilog/support/decoder.v",
@@ -784,13 +778,8 @@
     "name": "handshake.decoderAlt",
     "parameters": [
       { "name": "SIZE", "type": "unsigned", "lb": 1 },
-      {
-        "name": "DATA_TYPE",
-        "type": "dataflow",
-        "data-eq": 0,
-        "extra-eq": 0,
-        "generic": false
-      }
+      { "name": "DATA_TYPE", "type": "dataflow", "data-lb": 1, "extra-eq": 0 },
+      { "name": "SELECT_TYPE", "type": "unsigned", "lb": 1 }
     ],
     "generic": "$DYNAMATIC/data/verilog/support/decoderAlt.v",
     "dependencies":["decoder"],
@@ -798,34 +787,38 @@
   },
   {
     "name": "handshake.systolicOp",
-    "generic": "$DYNAMATIC/data/verilog/arith/decoder.v",
+    "parameters": [
+      { "name": "DATA_TYPE", "type": "dataflow", "data-lb": 1, "extra-eq": 0 }
+    ],
+    "generic": "$DYNAMATIC/data/verilog/support/systolic.v",
     "hdl": "verilog"
   },
   {
     "name": "handshake.systolicCtrlOp",
-    "generic": "$DYNAMATIC/data/verilog/arith/decoder.v",
+    "parameters": [
+      { "name": "DATA_TYPE", "type": "dataflow", "data-lb": 1, "extra-eq": 0 }
+    ],
+    "generic": "$DYNAMATIC/data/verilog/support/systolicCtrl.v",
     "hdl": "verilog"
   },
   {
     "name": "handshake.systolicCtrlConvOp",
+    "parameters": [
+      { "name": "DATA_TYPE", "type": "dataflow", "data-lb": 1, "extra-eq": 0 },
+      { "name": "SELECT_TYPE", "type": "dataflow", "data-lb": 1, "extra-eq": 0 }
+    ],
     "generic": "$DYNAMATIC/data/verilog/arith/decoder.v",
     "hdl": "verilog"
   },
   {
     "name": "__esp_LoadReqESP",
     "generic": "$DYNAMATIC/data/verilog/support/LoadReqESP.v",
-    "parameters": [
-      { "name": "DATA_TYPE", "type": "dataflow", "data-lb": 1, "extra-eq": 0 }
-    ],
     "dependencies": ["muli"],
     "hdl": "verilog"
   },
   {
     "name": "__esp_StoreReqESP",
     "generic": "$DYNAMATIC/data/verilog/support/StoreReqESP.v",
-    "parameters": [
-      { "name": "DATA_TYPE", "type": "dataflow", "data-lb": 1, "extra-eq": 0 }
-    ],
     "dependencies": ["muli"],
     "hdl": "verilog"
   }
