@@ -21,12 +21,12 @@ module decoder #(
 
 	
   wire joinValid;
-  reg joinReady;
+  wire joinReady;
   integer i;
 
   always@(posedge clk) begin
     for (i = 0; i < SIZE ; i=i+1 ) begin
-      if ((i[SELECT_TYPE - 1 : 0] == index) && index_valid == 1 && ins_valid == 1 && ready_out_bus[i] == 1) begin
+      if ((i[SELECT_TYPE - 1 : 0] == index) && index_valid == 1 && ins_valid == 1 && outs_ready[i] == 1) begin
         outs_valid[i] <= 1'd1;
         outs[(i * DATA_TYPE) +: DATA_TYPE ] <= ins[(DATA_TYPE) - 1 : 0] ;
       end else begin
