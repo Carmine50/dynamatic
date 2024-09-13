@@ -807,7 +807,7 @@
       { "name": "DATA_TYPE", "type": "dataflow", "data-lb": 1, "extra-eq": 0 },
       { "name": "SELECT_TYPE", "type": "dataflow", "data-lb": 1, "extra-eq": 0 }
     ],
-    "generic": "$DYNAMATIC/data/verilog/arith/decoder.v",
+    "generator": "\"$DYNAMATIC/bin/generators/rtl-sysCtrlConv-generator\" \"$DYNAMATIC/data/verilog/support/systolicCtrlConv_template.v\" \"$OUTPUT_DIR/systolicCtrlConv.v\" 8 4",
     "hdl": "verilog"
   },
   {
