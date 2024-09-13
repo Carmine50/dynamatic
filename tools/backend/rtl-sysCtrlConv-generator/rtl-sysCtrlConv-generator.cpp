@@ -1,4 +1,5 @@
-//===- rtl-cmpi-generator.cpp - Generator for arith.cmpi --------*- C++ -*-===//
+//===- rtl-sysCtrlConv-generator.cpp - Generator for handshake.sysCtrlConv
+//--------*- C++ -*-===//
 //
 // Dynamatic is under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -6,8 +7,8 @@
 //
 //===----------------------------------------------------------------------===//
 //
-// RTL generator for the `arith.cmpi` MLIR operation. Generates the correct RTL
-// based on the integer comparison predicate.
+// RTL generator for the `handshake.sysCtrlConv` MLIR operation. Generates the
+// correct RTL based on the input and kernel matrix sizes.
 //
 //===----------------------------------------------------------------------===//
 
@@ -18,8 +19,8 @@
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/InitLLVM.h"
 #include "llvm/Support/SourceMgr.h"
-#include <cstddef>
 #include <fstream>
+#include <regex>
 #include <string>
 #include <sys/types.h>
 
@@ -29,6 +30,14 @@ using namespace dynamatic;
 
 static cl::OptionCategory mainCategory("Tool options");
 
+static cl::opt<std::string> templatePath(cl::Positional, cl::Required,
+                                         cl::desc("<template file>"),
+                                         cl::cat(mainCategory));
+
+static cl::opt<std::string> outputRTLPath(cl::Positional, cl::Required,
+                                          cl::desc("<output file>"),
+                                          cl::cat(mainCategory));
+
 static cl::opt<std::string> rowsInputMatrix(cl::Positional, cl::Required,
                                             cl::desc("<rows input matrix>"),
                                             cl::cat(mainCategory));
@@ -37,9 +46,15 @@ static cl::opt<std::string> rowsKernelMatrix(cl::Positional, cl::Required,
                                              cl::desc("<rows kernel matrix>"),
                                              cl::cat(mainCategory));
 
-static cl::opt<std::string> outputRTLPath(cl::Positional, cl::Required,
-                                          cl::desc("<output file>"),
-                                          cl::cat(mainCategory));
+// TODO: remove this function and use only the one from
+// dynamatic/Support/RTL/RTL.h
+std::string dynamatic::replaceRegexes(
+    StringRef input, const std::map<std::string, std::string> &replacements) {
+  std::string result(input);
+  for (auto &[from, to] : replacements)
+    result = std::regex_replace(result, std::regex(from), to);
+  return result;
+}
 
 // Generate the RTL for the `handshake::systolicCtrlConv` operation
 static std::string generateReshapeLoop(uint rowsInput, uint rowsKernel) {
@@ -49,14 +64,14 @@ static std::string generateReshapeLoop(uint rowsInput, uint rowsKernel) {
   outputLoop += "    dataOutSignal_valid <= 1;\n";
   outputLoop += "    case (cnt_write_rows)\n";
 
-  SmallVector<std::string> kernelValues;
+  SmallVector<std::string> kernelValuesInit;
   for (uint yCoord = 0; yCoord < rowsKernel; yCoord++) {
     for (uint xCoord = 0; xCoord < rowsKernel; xCoord++) {
-      kernelValues.push_back(
+      kernelValuesInit.push_back(
           "kernelMatrix[" + std::to_string(xCoord * rowsKernel + yCoord) + "]");
     }
     for (uint xCoord = 0; xCoord < (rowsInput - rowsKernel); xCoord++) {
-      kernelValues.push_back("16'd0");
+      kernelValuesInit.push_back("16'd0");
     }
   }
 
@@ -71,6 +86,14 @@ static std::string generateReshapeLoop(uint rowsInput, uint rowsKernel) {
       uint numberPrecedingZeros = xCoord * rowsInput + yCoord;
       uint numberPostZeros = (rowsInput - xCoord - rowsKernel) * rowsInput +
                              (rowsInput - yCoord - rowsKernel);
+
+      SmallVector<std::string> kernelValues = kernelValuesInit;
+      for (uint i = 0; i < numberPrecedingZeros; i++) {
+        kernelValues.insert(kernelValues.begin(), "16'd0");
+      }
+      for (uint i = 0; i < numberPostZeros; i++) {
+        kernelValues.push_back("16'd0");
+      }
 
       for (uint iState = 0; iState < numInternalStates; iState++) {
         // Generate the input matrix values
@@ -150,10 +173,10 @@ int main(int argc, char **argv) {
   }
 
   // Open template file
-  std::ifstream templateFile("systolicCtrlConv_template.v");
+  std::ifstream templateFile(templatePath);
   if (!templateFile.is_open()) {
-    llvm::errs()
-        << "Failed to open template file @ \"systolicCtrlConv_template.v\"\n";
+    llvm::errs() << "Failed to open template file @ \"" << templatePath
+                 << "\"\n";
     return 1;
   }
 
@@ -173,6 +196,7 @@ int main(int argc, char **argv) {
 
   // Record the replacements to be made
   std::map<std::string, std::string> replacementMap;
+
   replacementMap["TEMPLATE_ROWS_SIZE_INPUT_MAT"] = std::to_string(rowsInput);
   replacementMap["TEMPLATE_ROWS_SIZE_KERNEL_MAT"] = std::to_string(rowsKernel);
   replacementMap["TEMPLATE_SIZE_INPUT_MAT"] =
@@ -183,6 +207,6 @@ int main(int argc, char **argv) {
   replacementMap["RESHAPE_LOOP"] = generateReshapeLoop(rowsInput, rowsKernel);
 
   // Dump to the output file and return
-  outputFile << dynamatic::replaceRegexes(inputData, replacementMap);
+  outputFile << replaceRegexes(inputData, replacementMap);
   return 0;
 }

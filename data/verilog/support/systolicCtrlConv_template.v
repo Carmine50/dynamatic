@@ -2,16 +2,16 @@ module systolicCtrlConv #(
   parameter DATA_TYPE = 64,
   parameter SELECT_TYPE = 32
 )(
-		input clk,
-		input rst,
-    // data input channels
-    input [SELECT_TYPE + DATA_TYPE - 1 : 0] ins,
-    input [1 : 0] ins_valid,
-    output [1 : 0] ins_ready,
-    // output channel
-    output [SELECT_TYPE + DATA_TYPE - 1 : 0] outs,
-    output [1 : 0] outs_valid,
-    input 	[1 : 0] outs_ready
+  input clk,
+  input rst,
+  // data input channels
+  input [SELECT_TYPE + DATA_TYPE - 1 : 0] ins,
+  input [1 : 0] ins_valid,
+  output [1 : 0] ins_ready,
+  // output channel
+  output [SELECT_TYPE + DATA_TYPE - 1 : 0] outs,
+  output [1 : 0] outs_valid,
+  input 	[1 : 0] outs_ready
 );
 
   // IMPORTANT: This code assumes that the size of the input data is 64 bits
