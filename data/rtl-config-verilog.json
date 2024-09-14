@@ -807,7 +807,7 @@
       { "name": "DATA_TYPE", "type": "dataflow", "data-lb": 1, "extra-eq": 0 },
       { "name": "SELECT_TYPE", "type": "dataflow", "data-lb": 1, "extra-eq": 0 }
     ],
-    "generator": "\"$DYNAMATIC/bin/generators/rtl-sysCtrlConv-generator\" \"$DYNAMATIC/data/verilog/support/systolicCtrlConv_template.v\" \"$OUTPUT_DIR/systolicCtrlConv.v\" 8 4",
+    "generator": "\"$DYNAMATIC/bin/generators/rtl-sysCtrlConv-generator\" \"$DYNAMATIC/data/verilog/support/systolicCtrlConv_template.v\" \"$OUTPUT_DIR/systolicCtrlConv.v\" 4 2",
     "hdl": "verilog"
   },
   {
