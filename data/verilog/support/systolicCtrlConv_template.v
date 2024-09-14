@@ -28,7 +28,7 @@ module systolicCtrlConv #(
 	integer read_inMat;
 	reg start_write;
 	reg [9:0] cnt_write_rows;
-	reg [9:0] cnt_write_col;
+	reg [9:0] cnt_write_cols;
 	reg [(16 - 1) : 0] inputMatrix [SIZE_INPUT_MAT - 1:0];
 	reg [(16 - 1) : 0] kernelMatrix [SIZE_KERNEL_MAT - 1:0];
 
@@ -61,7 +61,7 @@ module systolicCtrlConv #(
       read_inMat <= 1;
       start_write <= 0;
       cnt_write_rows <= 0;
-      cnt_write_col <= 0;
+      cnt_write_cols <= 0;
       // set all signals for output to 0 and ready to 11
       startSignal <= 0;
       startSignal_valid <= 0;
@@ -74,7 +74,7 @@ module systolicCtrlConv #(
         readyOut <= 2'd0;
         start_write <= 1;
         cnt_write_rows <= 9'd0;
-        cnt_write_col <= 9'd0;
+        cnt_write_cols <= 9'd0;
       end else begin
           if (dataInSignal_valid && start_write == 1'b0) begin
             if (read_inMat == 1'd1) begin
@@ -83,7 +83,9 @@ module systolicCtrlConv #(
               inputMatrix[cnt_index_inMat+2] <= dataInSignal[(48 - 1) : 32];
               inputMatrix[cnt_index_inMat+3] <= dataInSignal[(64 - 1) : 48];
               cnt_index_inMat <= cnt_index_inMat + 4;
-              if (cnt_index_inMat >= (SIZE_INPUT_MAT - 4)) begin
+              if (cnt_index_kernelMat >= SIZE_KERNEL_MAT ) begin
+                read_inMat <= 1;
+              end else begin
                 read_inMat <= 0;
               end
             end else begin
@@ -92,7 +94,9 @@ module systolicCtrlConv #(
               kernelMatrix[cnt_index_kernelMat+2] <= dataInSignal[(48 - 1) : 32];
               kernelMatrix[cnt_index_kernelMat+3] <= dataInSignal[(64 - 1) : 48];
               cnt_index_kernelMat <= cnt_index_kernelMat + 4;
-              if (cnt_index_kernelMat >=  (SIZE_KERNEL_MAT - 4 )) begin
+              if (cnt_index_inMat >=  SIZE_INPUT_MAT ) begin
+                read_inMat <= 0;
+              end else begin
                 read_inMat <= 1;
               end
             end
