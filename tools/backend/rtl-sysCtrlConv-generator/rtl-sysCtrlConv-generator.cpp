@@ -60,7 +60,7 @@ std::string dynamatic::replaceRegexes(
 static std::string generateReshapeLoop(uint rowsInput, uint rowsKernel) {
 
   std::string outputLoop = "always @(posedge clk) begin\n";
-  outputLoop += "  if (start_write && ins_ready[0]) begin\n";
+  outputLoop += "  if (start_write && tehbReady) begin\n";
   outputLoop += "    dataOutSignal_valid <= 1;\n";
   outputLoop += "    case (cnt_write_rows)\n";
 
@@ -126,7 +126,7 @@ static std::string generateReshapeLoop(uint rowsInput, uint rowsKernel) {
         }
         outputLoop += "           end\n";
       }
-      outputLoop += "         default: start_write <= 1\n";
+      outputLoop += "         default: start_write <= 1;\n";
       outputLoop += "         endcase\n";
       outputLoop += "      end\n";
       cntWriteRows++;
@@ -141,7 +141,7 @@ static std::string generateReshapeLoop(uint rowsInput, uint rowsKernel) {
   outputLoop += "      startSignal <= 1;\n";
   outputLoop += "      readyOut <= 2'd3;\n";
   outputLoop += "    end\n";
-  outputLoop += "    default: start_write <= 1\n";
+  outputLoop += "    default: start_write <= 1;\n";
   outputLoop += "    endcase\n";
   outputLoop += "  end\n";
   outputLoop += "  end\n";
