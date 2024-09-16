@@ -12,6 +12,10 @@ module StoreReqESP #(
     input iBurst_valid,
     output iBurst_ready,
 
+    input [ DATA_TYPE - 1 : 0] conf_info_nbursts,
+    input conf_info_nbursts_valid,
+    output conf_info_nbursts_ready,
+
     input [ DATA_TYPE - 1 : 0]conf_info_mat_out_size,
     input conf_info_mat_out_size_valid,
     output conf_info_mat_out_size_ready,
@@ -44,7 +48,7 @@ module StoreReqESP #(
 
     muli #(.DATA_TYPE(DATA_TYPE), .LATENCY(4)) muli0
     (.clk(clk), .rst(rst), .lhs(conf_info_mat_1_size), .lhs_valid(conf_info_mat_1_size_valid), .lhs_ready(readyOutMul[0]),
-    .rhs(iBurst), .rhs_valid(iBurst_valid), .rhs_ready(readyOutMul[2]), .result(result_mul0), .result_valid(valid_mul0), .result_ready(ready_mul0));
+    .rhs(conf_info_nbursts), .rhs_valid(conf_info_nbursts_valid), .rhs_ready(readyOutMul[2]), .result(result_mul0), .result_valid(valid_mul0), .result_ready(ready_mul0));
 
     muli #(.DATA_TYPE(DATA_TYPE), .LATENCY(4)) muli1
     (.clk(clk), .rst(rst), .lhs(conf_info_mat_out_size), .lhs_valid(conf_info_mat_out_size_valid), .lhs_ready(readyOutMul[1]),
@@ -56,8 +60,8 @@ module StoreReqESP #(
 
     // synchronize inputs
     //
-    join_type #(.SIZE(3)) j(.ins_valid({conf_info_mat_1_size_valid, conf_info_fpsa_valid, iBurst_valid}), .ins_ready({conf_info_mat_1_size_ready, conf_info_fpsa_ready, iBurst_ready}), 
-    .outs_valid(joinValid), .outs_ready(joinReady));
+    join_type #(.SIZE(4)) j(.ins_valid({conf_info_mat_1_size_valid, conf_info_nbursts_valid, iBurst_valid, conf_info_mat_out_size_valid}), 
+    .ins_ready({conf_info_mat_1_size_ready, conf_info_nbursts_ready, iBurst_ready, conf_info_mat_out_size_ready}), .outs_valid(joinValid), .outs_ready(joinReady));
 
       assign joinReady = readyOutMul[0] & readyOutMul[1] & readyOutMul[2] & readyOutMul[3];
 

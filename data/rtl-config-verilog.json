@@ -819,7 +819,7 @@
   {
     "name": "__esp_StoreReqESP",
     "generic": "$DYNAMATIC/data/verilog/support/StoreReqESP.v",
-    "dependencies": ["muli"],
+    "dependencies": ["muli", "addi"],
     "hdl": "verilog"
   }
 ]
